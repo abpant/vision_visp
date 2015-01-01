@@ -15,7 +15,4 @@ namespace visp_auto_tracker
 
   std::string tracker_ref_frame("/map");
   std::string tracker_config_file("config.cfg");
-  
-  
-  std::string code_message("asma_code_message");
 }

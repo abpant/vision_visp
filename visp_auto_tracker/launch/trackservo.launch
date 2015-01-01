@@ -1,0 +1,59 @@
+<!-- -*- xml -*- -->
+<launch>	
+  <!-- Launch the tracking node -->
+
+
+
+<node name="camera" pkg="openni_camera" type="openni_node" respawn="false" output="log">
+
+        <param name="camera_frame_id" type="string" value="camera"/>
+        <param name="video_device" type="string" value="/dev/bus/usb/002/009"/>
+        <param name="camera_frame_id" type="string" value="camera"/>
+
+        <param name="io_method" type="string" value="mmap"/>
+        <param name="image_width" type="int" value="640"/>
+        <param name="image_height" type="int" value="480"/>
+        <param name="pixel_format" type="string" value="mjpeg"/> 
+
+        <rosparam param="D">[-0.01019, 0.00000, 0.00000, 0.00000, 0.00000]</rosparam>
+        <rosparam param="K">[548.83913,0.00000,309.68288,0.00000,541.05367,246.39086, 0.00000, 0.00000, 1.00000]</rosparam>
+        <rosparam param="R">[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]</rosparam>
+        <rosparam param="P">[548.83913,0.00000,309.68288,0.00000,0.00000,541.05367,246.39086, 0.00000, 0.00000 0.00000, 1.00000, 0.00000]</rosparam>
+
+    <remap from="/camera/rgb/image_raw" to="/image_rect"/>
+    <remap from="/camera/rgb/camera_info" to="/camera_info"/>
+
+    </node>
+
+
+
+
+<node pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen">      
+    <param name="image_width" type="int" value="640" />
+    <param name="image_height" type="int" value="480" />
+    <param name="video_device" type="string" value="/dev/video0" />      
+    <param name="pixel_format" type="string" value="yuyv" />
+
+    <rosparam param="D">[-0.01484690262, 0.,0., 0., 0.000]</rosparam>
+    <rosparam param="P">[543.1594454, 0.0, 320.1025306, 0.0, 0.0, 539.1300717, 212.8181022, 0.0, 0.0, 0.0, 1.0, 0.0]</rosparam>
+    <rosparam param="R">[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]</rosparam>
+    <rosparam param="K">[543.1594454, 0.0, 320.1025306, 0.0, 539.1300717, 212.8181022, 0.0, 0.0, 1.0]</rosparam>
+
+    <remap from="/usb_cam/image_raw" to="/image_rect"/>
+    <remap from="/usb_cam/camera_info" to="/camera_info"/>
+  </node>
+
+
+<node pkg="visp_auto_tracker" type="visp_auto_tracker" name="visp_auto_tracker" output="screen" respawn="true" >
+    <param name="model_path" type="string" value="$(find visp_auto_tracker)/models" />
+    <param name="model_name" type="string" value="pattern" />
+    <param name="debug_display" type="bool" value="True" />
+	      
+    <!--<remap from="/visp_auto_tracker/camera_info" to="/usb_cam/camera_info"/>
+    <remap from="/visp_auto_tracker/image_raw" to="/usb_cam/image_raw"/>-->
+  <remap from="/visp_auto_tracker/camera_info" to="/camera_info"/>
+    <remap from="/visp_auto_tracker/image_raw" to="/image_rect"/>
+
+  </node>
+
+</launch>

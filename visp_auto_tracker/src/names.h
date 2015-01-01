@@ -16,6 +16,8 @@ namespace visp_auto_tracker
 
         extern std::string tracker_ref_frame;
         extern std::string tracker_config_file;
+
+        extern std::string code_message;
 }
 
 #endif

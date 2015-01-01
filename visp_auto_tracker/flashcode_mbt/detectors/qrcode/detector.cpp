@@ -31,6 +31,7 @@ namespace qrcode{
         symbol != img.symbol_end();
         ++symbol) {
         message_ = symbol->get_data();
+        std::cout<<message_<<std::endl;
         detected = true;
 
         for(int i=0;

@@ -32,6 +32,7 @@
 #include "resource_retriever/retriever.h"
 
 #include "std_msgs/Int8.h"
+#include "std_msgs/String.h"
 
 
 namespace visp_auto_tracker{
@@ -132,6 +133,8 @@ namespace visp_auto_tracker{
                 ros::Publisher moving_edge_sites_publisher = n_.advertise<visp_tracker::MovingEdgeSites>(moving_edge_sites_topic, queue_size_);
                 ros::Publisher klt_points_publisher = n_.advertise<visp_tracker::KltPoints>(klt_points_topic, queue_size_);
                 ros::Publisher status_publisher = n_.advertise<std_msgs::Int8>(status_topic, queue_size_);
+                ros::Publisher code_message_publisher = n_.advertise<std_msgs::String>(code_message, queue_size_);
+
 
                 //wait for an image to be ready
                 waitForImage();
@@ -162,6 +165,17 @@ namespace visp_auto_tracker{
 
                         ps.pose = visp_bridge::toGeometryMsgsPose(track_model.cMo); //convert
 
+
+						// Publish Code Message.
+                        if (code_message_publisher.getNumSubscribers() > 0)
+                        {
+                            std_msgs::String c_message;
+                            c_message.data = detector->get_message();
+                            code_message_publisher.publish(c_message);
+                            std::cout<< "debug::message " << detector->get_message() <<std::endl;
+
+                        }
+                        
                         // Publish resulting pose.
                         if (object_pose_publisher.getNumSubscribers	() > 0)
                         {
@@ -209,8 +223,8 @@ namespace visp_auto_tracker{
 
                         ros::spinOnce();
                         rate.sleep();
-                        if (cmd.show_fps())
-                          std::cout << "Tracking done in " << vpTime::measureTimeMs() - t << " ms" << std::endl;
+                        if (false & cmd.show_fps())
+                        std::cout << "Ozan done in " << vpTime::measureTimeMs() - t << " ms" << std::endl;
                 }
                 t_->process_event(tracking::finished());
         }

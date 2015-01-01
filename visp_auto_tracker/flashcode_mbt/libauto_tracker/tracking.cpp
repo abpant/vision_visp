@@ -355,6 +355,8 @@ namespace tracking{
           if( cmd.using_adhoc_recovery() && (unsigned int)checkpoints_median>cmd.get_adhoc_recovery_treshold() )
             return false;
         }
+
+
       }
     }catch(vpException& e){
       std::cout << "Tracking lost" << std::endl;
@@ -384,17 +386,10 @@ namespace tracking{
       double u=0.,v=0.,u_inner=0.,v_inner=0;
       vpMeterPixelConversion::convertPoint(cam_,points3D_outer_[i].get_x(),points3D_outer_[i].get_y(),u,v);
       vpMeterPixelConversion::convertPoint(cam_,points3D_inner_[i].get_x(),points3D_inner_[i].get_y(),u_inner,v_inner);
+      points.push_back(cv::Point(u,v));
 
       acc(std::abs(u-u_inner));
       acc(std::abs(v-v_inner));
-
-      // To avoid OpenCV exception that may occur when creating cv::boundingRect() from the points,
-      // we ensure that the coordinates of the points remain in the image.
-      u = std::max(u,0.);
-      u = std::min(u,(double)evt.I.getWidth()-1);
-      v = std::max(v,0.);
-      v = std::min(v,(double)evt.I.getHeight()-1);
-      points.push_back(cv::Point(u,v));
     }
 
     if(cmd.using_mbt_dynamic_range()){
@@ -410,7 +405,18 @@ namespace tracking{
     }
     cvTrackingBox_init_ = true;
     cvTrackingBox_ = cv::boundingRect(cv::Mat(points));
-
+    int s_x = cvTrackingBox_.x,
+        s_y = cvTrackingBox_.y,
+        d_x = cvTrackingBox_.x + cvTrackingBox_.width,
+        d_y = cvTrackingBox_.y + cvTrackingBox_.height;
+    s_x = std::max(s_x,0);
+    s_y = std::max(s_y,0);
+    d_x = std::min(d_x,(int)evt.I.getWidth());
+    d_y = std::min(d_y,(int)evt.I.getHeight());
+    cvTrackingBox_.x = s_x;
+    cvTrackingBox_.y = s_y;
+    cvTrackingBox_.width = d_x - s_x;
+    cvTrackingBox_.height = d_y - s_y;
     vpTrackingBox_.setRect(cvTrackingBox_.x,cvTrackingBox_.y,cvTrackingBox_.width,cvTrackingBox_.height);
   }
 
@@ -475,7 +481,6 @@ namespace tracking{
     if (!klt)
       return;
 
-#if VISP_VERSION_INT < (2<<16 | 10<<8 | 0) // ViSP < 2.10.0
     vpMbHiddenFaces<vpMbtKltPolygon> *poly_lst;
     std::map<int, vpImagePoint> *map_klt;
 
@@ -501,30 +506,6 @@ namespace tracking{
         }
       }
     }
-#else // ViSP >= 2.10.0
-    std::list<vpMbtDistanceKltPoints*> *poly_lst;
-    std::map<int, vpImagePoint> *map_klt;
-
-    if(cmd.get_tracker_type() != CmdLine::MBT) { // For klt and hybrid
-      poly_lst = &dynamic_cast<vpMbKltTracker*>(tracker_)->getFeaturesKlt();
-
-      for(std::list<vpMbtDistanceKltPoints*>::const_iterator it=poly_lst->begin(); it!=poly_lst->end(); ++it){
-        map_klt = &((*it)->getCurrentPoints());
-        
-        if(map_klt->size() > 3)
-          {
-            for (std::map<int, vpImagePoint>::iterator it=map_klt->begin(); it!=map_klt->end(); ++it)
-            {
-              visp_tracker::KltPoint kltPoint;
-              kltPoint.id = it->first;
-              kltPoint.i = it->second.get_i();
-              kltPoint.j = it->second.get_j();
-              klt->klt_points_positions.push_back (kltPoint);
-            }
-          }
-      }
-    }
-#endif
   }
 }
 
